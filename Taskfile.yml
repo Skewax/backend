@@ -14,7 +14,7 @@ tasks:
   swagger.gen:
     desc: generate swagger code
     cmds:
-    - GOFLAGS=-mod=mod go generate github.com/Skewax/skewax-backend/internal github.com/Skewax/skewax-backend/pkg/swagger
+    - GOFLAGS=-mod=mod go generate github.com/Skewax/backend/internal github.com/Skewax/backend/pkg/swagger
 
 
   swagger.validate:

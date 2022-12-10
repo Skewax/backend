@@ -1,0 +1,11 @@
+FROM golang:latest
+
+LABEL maintainer="Eleanor Olson, eleanorkolson@gmail.com"
+
+WORKDIR /app
+
+
+
+# for webserver
+
+EXPOSE 8080

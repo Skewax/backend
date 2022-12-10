@@ -1,0 +1,25 @@
+version: "3"
+
+tasks:
+  build:
+    desc: build the app
+    cmds:
+    - GOFLAGS=-mod=mod go build -o bin/skewax-backend internal/main.go
+
+  run:
+    desc: run the app
+    cmds:
+    - GOFLAGS=-mod=mod go run internal/main.go
+
+  swagger.gen:
+    desc: generate swagger code
+    cmds:
+    - GOFLAGS=-mod=mod go generate github.com/Skewax/skewax-backend/internal github.com/Skewax/skewax-backend/pkg/swagger
+
+
+  swagger.validate:
+    desc: Validate Swagger Code
+    cmds:
+    - swagger validate pkg/swagger/swagger.yml
+
+

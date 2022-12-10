@@ -1,0 +1,78 @@
+consumes:
+- application/json
+info:
+  description: Skewax backend server to interface with google drive
+  title: skewax-backend
+  version: 0.3.0
+produces:
+- application/json
+schemes:
+- http
+swagger: "2.0"
+
+
+
+paths:
+  /newLogin:
+    get:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+    responses:
+      200:
+        description: A successful login
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error: 
+                  type: string
+                session-id:
+                  type: string
+                timeout:
+                  type: integer
+                  format: int64
+                user:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    image:
+                      type: string
+      400:
+        description: an incorrectly formatted ID
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error: 
+                  type: string
+      408:
+        description: timeout of this ID
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type: string
+      500:
+        description: generic server error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type:string
+       
+
+
+

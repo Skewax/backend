@@ -15,64 +15,52 @@ swagger: "2.0"
 paths:
   /newLogin:
     get:
-      required: true
-      content:
-        application/json:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        200:
+          description: A successful login
           schema:
             type: object
             properties:
-              code:
+              error: 
                 type: string
-    responses:
-      200:
-        description: A successful login
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                error: 
-                  type: string
-                session-id:
-                  type: string
-                timeout:
-                  type: integer
-                  format: int64
-                user:
-                  type: object
-                  properties:
-                    name:
-                      type: string
-                    image:
-                      type: string
-      400:
-        description: an incorrectly formatted ID
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                error: 
-                  type: string
-      408:
-        description: timeout of this ID
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                error:
-                  type: string
-      500:
-        description: generic server error
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                error:
-                  type:string
-       
+              session-id:
+                type: string
+              timeout:
+                type: integer
+                format: int64
+              user:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  image:
+                    type: string
+        400:
+          description: an incorrectly formatted ID
+          schema:
+            type: object
+            properties:
+              error: 
+                type: string
+        408:
+          description: timeout of this ID
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+        500:
+          description: generic server error
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+         
 
 
 

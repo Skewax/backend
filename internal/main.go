@@ -1,40 +1,41 @@
 package main
 
-
 import (
-  "net/http"
-  "io"
-  "log"
-  "encoding/json"
-  "golang.org/x/oauth2"
-  "golang.org/x/oauth2/google"
-  "google.golang.org/api/drive/v3"
+	"log"
+
+	"github.com/Skewax/backend/pkg/swagger/server/restapi"
+	"github.com/go-openapi/loads"
+	// "github.com/go-openapi/runtime/middleware"
+
+	"github.com/Skewax/backend/pkg/swagger/server/restapi/operations"
+	// "golang.org/x/oauth2"
+	// "golang.org/x/oauth2/google"
+	// "google.golang.org/api/drive/v3"
 )
 
-// template of server
 func main() {
 
-  mux := http.NewServeMux()
-
-
-
-  mux.HandleFunc("/getFiles", getFilesHandler)
-  mux.HandleFunc("/login", loginHandler)
-
-  s := &http.Server{
-    Addr: ":8080",
-    Handler: mux,
+  swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
+  if(err != nil) {
+    log.Fatalln(err)
   }
-  s.ListenAndServe()
 
+  api := operations.NewSkewaxBackendAPI(swaggerSpec)
+
+	server := restapi.NewServer(api)
+	server.Port = 8080
+
+  defer func() {
+  	if err := server.Shutdown(); err != nil {
+  		log.Fatalln(err)
+  	}
+  }()
+
+
+	if err := server.Serve();  err != nil {
+		log.Fatalln(err)
+	}
 }
 
-func loginHandler(res http.ResponseWriter, req *http.Request) {
-}
 
-func getFilesHandler(res http.ResponseWriter, req *http.Request) {
-  
-}
-
-// user 
 

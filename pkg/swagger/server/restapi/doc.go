@@ -4,7 +4,7 @@
 //
 //	Skewax backend server to interface with google drive
 //	Schemes:
-//	  http
+//	  https
 //	Host: localhost
 //	BasePath: /
 //	Version: 0.3.0

@@ -22,4 +22,8 @@ tasks:
     cmds:
     - swagger validate pkg/swagger/swagger.yml
 
+  swagger.doc:
+    desc: generate docs for swagger
+    cmds:
+    - docker run --rm -i yousan/swagger-yaml-to-html < pkg/swagger/swagger.yml > docs/index.html
 

@@ -25,7 +25,7 @@ func init() {
     "application/json"
   ],
   "schemes": [
-    "http"
+    "https"
   ],
   "swagger": "2.0",
   "info": {
@@ -34,76 +34,551 @@ func init() {
     "version": "0.3.0"
   },
   "paths": {
-    "/newLogin": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
+    "/createFile": {
+      "post": {
         "produces": [
           "application/json"
         ],
+        "tags": [
+          "Files"
+        ],
+        "summary": "create file with name and text, returns basic file object",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "session_token",
+                "user_id",
+                "file_name",
+                "text"
+              ],
+              "properties": {
+                "file_name": {
+                  "type": "string"
+                },
+                "session_token": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "user_id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "A successful login",
+            "description": "OK: updated file",
             "schema": {
               "type": "object",
               "properties": {
                 "error": {
                   "type": "string"
                 },
-                "session-id": {
-                  "type": "string"
-                },
-                "timeout": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "user": {
-                  "type": "object",
-                  "properties": {
-                    "image": {
-                      "type": "string"
-                    },
-                    "name": {
-                      "type": "string"
-                    }
-                  }
+                "file": {
+                  "$ref": "#/definitions/BasicFileObject"
                 }
               }
             }
           },
           "400": {
-            "description": "an incorrectly formatted ID",
+            "description": "malformed/invalid session token",
             "schema": {
               "type": "object",
-              "properties": {
-                "error": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "408": {
-            "description": "timeout of this ID",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "error": {
-                  "type": "string"
-                }
-              }
+              "$ref": "#/definitions/BasicResponse"
             }
           },
           "500": {
             "description": "generic server error",
             "schema": {
               "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          }
+        }
+      }
+    },
+    "/deleteFile": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Files"
+        ],
+        "summary": "delete file by ID",
+        "parameters": [
+          {
+            "$ref": "#/parameters/FileReference"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK: file deleted",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "400": {
+            "description": "malformed/invalid session token",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "500": {
+            "description": "generic server error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          }
+        }
+      }
+    },
+    "/getFiles": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Files"
+        ],
+        "summary": "get all files of user",
+        "parameters": [
+          {
+            "$ref": "#/parameters/TokenAuth"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK: a list of all users files",
+            "schema": {
+              "type": "object",
               "properties": {
                 "error": {
+                  "type": "string"
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/BasicFileObject"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "malformed/incorrect session token",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "500": {
+            "description": "generic server error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          }
+        }
+      }
+    },
+    "/logout": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "removes the current session token from the database",
+        "parameters": [
+          {
+            "$ref": "#/parameters/TokenAuth"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "400": {
+            "description": "malformed or nonexistent session token",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "500": {
+            "description": "generic server error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          }
+        }
+      }
+    },
+    "/newLogin": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "logs in a user from google auth state",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "user",
+                "code",
+                "hosted_domain",
+                "prompt",
+                "scope",
+                "csrf_state"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "csrf_state": {
+                  "type": "string"
+                },
+                "hosted_domain": {
+                  "type": "string"
+                },
+                "prompt": {
+                  "type": "string"
+                },
+                "scope": {
+                  "type": "string"
+                },
+                "user": {
                   "type": "string"
                 }
               }
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/LoginResponse"
+            }
+          },
+          "400": {
+            "description": "an incorrect/incorrectly formatted ID",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "401": {
+            "description": "user did not grant all needed scopes",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "408": {
+            "description": "timeout of this ID",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "500": {
+            "description": "generic server error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          }
+        }
+      }
+    },
+    "/readFile": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Files"
+        ],
+        "summary": "get text and metadata of file by ID",
+        "parameters": [
+          {
+            "$ref": "#/parameters/FileReference"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK: returns full data on file",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/FileDataResponse"
+            }
+          },
+          "401": {
+            "description": "malformed/incorrect session token",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "500": {
+            "description": "generic server error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          }
+        }
+      }
+    },
+    "/tokenLogin": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "verifies a serssion token and returns user data. Will also generate a new session token and replace it",
+        "parameters": [
+          {
+            "$ref": "#/parameters/TokenAuth"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/LoginResponse"
+            }
+          },
+          "400": {
+            "description": "an incorrect/incorrectly formatted ID",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "500": {
+            "description": "generic server error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          }
+        }
+      }
+    },
+    "/updateFile": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Files"
+        ],
+        "summary": "set the text of a file by ID",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "session_token",
+                "user_id",
+                "file_id"
+              ],
+              "properties": {
+                "file_id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "session_token": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "user_id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK: updated file",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "400": {
+            "description": "malformed/incorrect session id",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "500": {
+            "description": "internal server error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "BasicFileObject": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "BasicResponse": {
+      "properties": {
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    "FileDataResponse": {
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "modifiedTime": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "text": {
+          "type": "string"
+        },
+        "writable": {
+          "description": "if this file is meant to be read by skewax",
+          "type": "boolean"
+        }
+      }
+    },
+    "LoginResponse": {
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "session_token": {
+          "type": "string"
+        },
+        "timeout": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "user": {
+          "$ref": "#/definitions/User"
+        }
+      }
+    },
+    "User": {
+      "type": "object",
+      "required": [
+        "name",
+        "image"
+      ],
+      "properties": {
+        "image": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "parameters": {
+    "FileReference": {
+      "description": "a reference to a specific file by ID and an authentication token with it",
+      "name": "body",
+      "in": "body",
+      "required": true,
+      "schema": {
+        "type": "object",
+        "required": [
+          "session_token",
+          "user_id",
+          "file_id"
+        ],
+        "properties": {
+          "file_id": {
+            "type": "string"
+          },
+          "session_token": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "TokenAuth": {
+      "description": "simply sending along the session token for authentication",
+      "name": "body",
+      "in": "body",
+      "required": true,
+      "schema": {
+        "type": "object",
+        "required": [
+          "session_token",
+          "user_id"
+        ],
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
           }
         }
       }
@@ -118,7 +593,7 @@ func init() {
     "application/json"
   ],
   "schemes": [
-    "http"
+    "https"
   ],
   "swagger": "2.0",
   "info": {
@@ -127,75 +602,527 @@ func init() {
     "version": "0.3.0"
   },
   "paths": {
-    "/newLogin": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
+    "/createFile": {
+      "post": {
         "produces": [
           "application/json"
         ],
+        "tags": [
+          "Files"
+        ],
+        "summary": "create file with name and text, returns basic file object",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "session_token",
+                "user_id",
+                "file_name",
+                "text"
+              ],
+              "properties": {
+                "file_name": {
+                  "type": "string"
+                },
+                "session_token": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "user_id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "A successful login",
+            "description": "OK: updated file",
             "schema": {
               "type": "object",
               "properties": {
                 "error": {
                   "type": "string"
                 },
-                "session-id": {
-                  "type": "string"
-                },
-                "timeout": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "user": {
-                  "type": "object",
-                  "properties": {
-                    "image": {
-                      "type": "string"
-                    },
-                    "name": {
-                      "type": "string"
-                    }
-                  }
+                "file": {
+                  "$ref": "#/definitions/BasicFileObject"
                 }
               }
             }
           },
           "400": {
-            "description": "an incorrectly formatted ID",
+            "description": "malformed/invalid session token",
             "schema": {
               "type": "object",
-              "properties": {
-                "error": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "408": {
-            "description": "timeout of this ID",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "error": {
-                  "type": "string"
-                }
-              }
+              "$ref": "#/definitions/BasicResponse"
             }
           },
           "500": {
             "description": "generic server error",
             "schema": {
               "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          }
+        }
+      }
+    },
+    "/deleteFile": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Files"
+        ],
+        "summary": "delete file by ID",
+        "parameters": [
+          {
+            "description": "a reference to a specific file by ID and an authentication token with it",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "session_token",
+                "user_id",
+                "file_id"
+              ],
               "properties": {
-                "error": {
+                "file_id": {
+                  "type": "string"
+                },
+                "session_token": {
+                  "type": "string"
+                },
+                "user_id": {
                   "type": "string"
                 }
               }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK: file deleted",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "400": {
+            "description": "malformed/invalid session token",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "500": {
+            "description": "generic server error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          }
+        }
+      }
+    },
+    "/getFiles": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Files"
+        ],
+        "summary": "get all files of user",
+        "parameters": [
+          {
+            "description": "simply sending along the session token for authentication",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "session_token",
+                "user_id"
+              ],
+              "properties": {
+                "token": {
+                  "type": "string"
+                },
+                "user_id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK: a list of all users files",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/BasicFileObject"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "malformed/incorrect session token",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "500": {
+            "description": "generic server error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          }
+        }
+      }
+    },
+    "/logout": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "removes the current session token from the database",
+        "parameters": [
+          {
+            "description": "simply sending along the session token for authentication",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "session_token",
+                "user_id"
+              ],
+              "properties": {
+                "token": {
+                  "type": "string"
+                },
+                "user_id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "400": {
+            "description": "malformed or nonexistent session token",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "500": {
+            "description": "generic server error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          }
+        }
+      }
+    },
+    "/newLogin": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "logs in a user from google auth state",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "user",
+                "code",
+                "hosted_domain",
+                "prompt",
+                "scope",
+                "csrf_state"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "csrf_state": {
+                  "type": "string"
+                },
+                "hosted_domain": {
+                  "type": "string"
+                },
+                "prompt": {
+                  "type": "string"
+                },
+                "scope": {
+                  "type": "string"
+                },
+                "user": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/LoginResponse"
+            }
+          },
+          "400": {
+            "description": "an incorrect/incorrectly formatted ID",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "401": {
+            "description": "user did not grant all needed scopes",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "408": {
+            "description": "timeout of this ID",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "500": {
+            "description": "generic server error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          }
+        }
+      }
+    },
+    "/readFile": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Files"
+        ],
+        "summary": "get text and metadata of file by ID",
+        "parameters": [
+          {
+            "description": "a reference to a specific file by ID and an authentication token with it",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "session_token",
+                "user_id",
+                "file_id"
+              ],
+              "properties": {
+                "file_id": {
+                  "type": "string"
+                },
+                "session_token": {
+                  "type": "string"
+                },
+                "user_id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK: returns full data on file",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/FileDataResponse"
+            }
+          },
+          "401": {
+            "description": "malformed/incorrect session token",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "500": {
+            "description": "generic server error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          }
+        }
+      }
+    },
+    "/tokenLogin": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "verifies a serssion token and returns user data. Will also generate a new session token and replace it",
+        "parameters": [
+          {
+            "description": "simply sending along the session token for authentication",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "session_token",
+                "user_id"
+              ],
+              "properties": {
+                "token": {
+                  "type": "string"
+                },
+                "user_id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/LoginResponse"
+            }
+          },
+          "400": {
+            "description": "an incorrect/incorrectly formatted ID",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "500": {
+            "description": "generic server error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          }
+        }
+      }
+    },
+    "/updateFile": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Files"
+        ],
+        "summary": "set the text of a file by ID",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "session_token",
+                "user_id",
+                "file_id"
+              ],
+              "properties": {
+                "file_id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "session_token": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "user_id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK: updated file",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "400": {
+            "description": "malformed/incorrect session id",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
+            }
+          },
+          "500": {
+            "description": "internal server error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/BasicResponse"
             }
           }
         }
@@ -203,14 +1130,122 @@ func init() {
     }
   },
   "definitions": {
-    "GetNewLoginOKBodyUser": {
+    "BasicFileObject": {
       "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "BasicResponse": {
+      "properties": {
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    "FileDataResponse": {
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "modifiedTime": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "text": {
+          "type": "string"
+        },
+        "writable": {
+          "description": "if this file is meant to be read by skewax",
+          "type": "boolean"
+        }
+      }
+    },
+    "LoginResponse": {
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "session_token": {
+          "type": "string"
+        },
+        "timeout": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "user": {
+          "$ref": "#/definitions/User"
+        }
+      }
+    },
+    "User": {
+      "type": "object",
+      "required": [
+        "name",
+        "image"
+      ],
       "properties": {
         "image": {
           "type": "string"
         },
         "name": {
           "type": "string"
+        }
+      }
+    }
+  },
+  "parameters": {
+    "FileReference": {
+      "description": "a reference to a specific file by ID and an authentication token with it",
+      "name": "body",
+      "in": "body",
+      "required": true,
+      "schema": {
+        "type": "object",
+        "required": [
+          "session_token",
+          "user_id",
+          "file_id"
+        ],
+        "properties": {
+          "file_id": {
+            "type": "string"
+          },
+          "session_token": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "TokenAuth": {
+      "description": "simply sending along the session token for authentication",
+      "name": "body",
+      "in": "body",
+      "required": true,
+      "schema": {
+        "type": "object",
+        "required": [
+          "session_token",
+          "user_id"
+        ],
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          }
         }
       }
     }

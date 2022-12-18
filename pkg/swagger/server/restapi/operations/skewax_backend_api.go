@@ -18,6 +18,9 @@ import (
 	"github.com/go-openapi/spec"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+
+	"github.com/Skewax/backend/pkg/swagger/server/restapi/operations/authentication"
+	"github.com/Skewax/backend/pkg/swagger/server/restapi/operations/files"
 )
 
 // NewSkewaxBackendAPI creates a new SkewaxBackend instance
@@ -42,8 +45,29 @@ func NewSkewaxBackendAPI(spec *loads.Document) *SkewaxBackendAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
-		GetNewLoginHandler: GetNewLoginHandlerFunc(func(params GetNewLoginParams) middleware.Responder {
-			return middleware.NotImplemented("operation GetNewLogin has not yet been implemented")
+		FilesGetGetFilesHandler: files.GetGetFilesHandlerFunc(func(params files.GetGetFilesParams) middleware.Responder {
+			return middleware.NotImplemented("operation files.GetGetFiles has not yet been implemented")
+		}),
+		FilesGetReadFileHandler: files.GetReadFileHandlerFunc(func(params files.GetReadFileParams) middleware.Responder {
+			return middleware.NotImplemented("operation files.GetReadFile has not yet been implemented")
+		}),
+		AuthenticationGetTokenLoginHandler: authentication.GetTokenLoginHandlerFunc(func(params authentication.GetTokenLoginParams) middleware.Responder {
+			return middleware.NotImplemented("operation authentication.GetTokenLogin has not yet been implemented")
+		}),
+		FilesPostCreateFileHandler: files.PostCreateFileHandlerFunc(func(params files.PostCreateFileParams) middleware.Responder {
+			return middleware.NotImplemented("operation files.PostCreateFile has not yet been implemented")
+		}),
+		FilesPostDeleteFileHandler: files.PostDeleteFileHandlerFunc(func(params files.PostDeleteFileParams) middleware.Responder {
+			return middleware.NotImplemented("operation files.PostDeleteFile has not yet been implemented")
+		}),
+		AuthenticationPostLogoutHandler: authentication.PostLogoutHandlerFunc(func(params authentication.PostLogoutParams) middleware.Responder {
+			return middleware.NotImplemented("operation authentication.PostLogout has not yet been implemented")
+		}),
+		AuthenticationPostNewLoginHandler: authentication.PostNewLoginHandlerFunc(func(params authentication.PostNewLoginParams) middleware.Responder {
+			return middleware.NotImplemented("operation authentication.PostNewLogin has not yet been implemented")
+		}),
+		FilesPostUpdateFileHandler: files.PostUpdateFileHandlerFunc(func(params files.PostUpdateFileParams) middleware.Responder {
+			return middleware.NotImplemented("operation files.PostUpdateFile has not yet been implemented")
 		}),
 	}
 }
@@ -81,8 +105,22 @@ type SkewaxBackendAPI struct {
 	//   - application/json
 	JSONProducer runtime.Producer
 
-	// GetNewLoginHandler sets the operation handler for the get new login operation
-	GetNewLoginHandler GetNewLoginHandler
+	// FilesGetGetFilesHandler sets the operation handler for the get get files operation
+	FilesGetGetFilesHandler files.GetGetFilesHandler
+	// FilesGetReadFileHandler sets the operation handler for the get read file operation
+	FilesGetReadFileHandler files.GetReadFileHandler
+	// AuthenticationGetTokenLoginHandler sets the operation handler for the get token login operation
+	AuthenticationGetTokenLoginHandler authentication.GetTokenLoginHandler
+	// FilesPostCreateFileHandler sets the operation handler for the post create file operation
+	FilesPostCreateFileHandler files.PostCreateFileHandler
+	// FilesPostDeleteFileHandler sets the operation handler for the post delete file operation
+	FilesPostDeleteFileHandler files.PostDeleteFileHandler
+	// AuthenticationPostLogoutHandler sets the operation handler for the post logout operation
+	AuthenticationPostLogoutHandler authentication.PostLogoutHandler
+	// AuthenticationPostNewLoginHandler sets the operation handler for the post new login operation
+	AuthenticationPostNewLoginHandler authentication.PostNewLoginHandler
+	// FilesPostUpdateFileHandler sets the operation handler for the post update file operation
+	FilesPostUpdateFileHandler files.PostUpdateFileHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -160,8 +198,29 @@ func (o *SkewaxBackendAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
-	if o.GetNewLoginHandler == nil {
-		unregistered = append(unregistered, "GetNewLoginHandler")
+	if o.FilesGetGetFilesHandler == nil {
+		unregistered = append(unregistered, "files.GetGetFilesHandler")
+	}
+	if o.FilesGetReadFileHandler == nil {
+		unregistered = append(unregistered, "files.GetReadFileHandler")
+	}
+	if o.AuthenticationGetTokenLoginHandler == nil {
+		unregistered = append(unregistered, "authentication.GetTokenLoginHandler")
+	}
+	if o.FilesPostCreateFileHandler == nil {
+		unregistered = append(unregistered, "files.PostCreateFileHandler")
+	}
+	if o.FilesPostDeleteFileHandler == nil {
+		unregistered = append(unregistered, "files.PostDeleteFileHandler")
+	}
+	if o.AuthenticationPostLogoutHandler == nil {
+		unregistered = append(unregistered, "authentication.PostLogoutHandler")
+	}
+	if o.AuthenticationPostNewLoginHandler == nil {
+		unregistered = append(unregistered, "authentication.PostNewLoginHandler")
+	}
+	if o.FilesPostUpdateFileHandler == nil {
+		unregistered = append(unregistered, "files.PostUpdateFileHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -254,7 +313,35 @@ func (o *SkewaxBackendAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/newLogin"] = NewGetNewLogin(o.context, o.GetNewLoginHandler)
+	o.handlers["GET"]["/getFiles"] = files.NewGetGetFiles(o.context, o.FilesGetGetFilesHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/readFile"] = files.NewGetReadFile(o.context, o.FilesGetReadFileHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/tokenLogin"] = authentication.NewGetTokenLogin(o.context, o.AuthenticationGetTokenLoginHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/createFile"] = files.NewPostCreateFile(o.context, o.FilesPostCreateFileHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/deleteFile"] = files.NewPostDeleteFile(o.context, o.FilesPostDeleteFileHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/logout"] = authentication.NewPostLogout(o.context, o.AuthenticationPostLogoutHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/newLogin"] = authentication.NewPostNewLogin(o.context, o.AuthenticationPostNewLoginHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/updateFile"] = files.NewPostUpdateFile(o.context, o.FilesPostUpdateFileHandler)
 }
 
 // Serve creates a http handler to serve the API over HTTP

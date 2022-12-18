@@ -11,6 +11,8 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 
 	"github.com/Skewax/backend/pkg/swagger/server/restapi/operations"
+	"github.com/Skewax/backend/pkg/swagger/server/restapi/operations/authentication"
+	"github.com/Skewax/backend/pkg/swagger/server/restapi/operations/files"
 )
 
 //go:generate swagger generate server --target ../../server --name SkewaxBackend --spec ../../swagger.yml --principal interface{} --exclude-main
@@ -37,9 +39,44 @@ func configureAPI(api *operations.SkewaxBackendAPI) http.Handler {
 
 	api.JSONProducer = runtime.JSONProducer()
 
-	if api.GetNewLoginHandler == nil {
-		api.GetNewLoginHandler = operations.GetNewLoginHandlerFunc(func(params operations.GetNewLoginParams) middleware.Responder {
-			return middleware.NotImplemented("operation operations.GetNewLogin has not yet been implemented")
+	if api.FilesGetGetFilesHandler == nil {
+		api.FilesGetGetFilesHandler = files.GetGetFilesHandlerFunc(func(params files.GetGetFilesParams) middleware.Responder {
+			return middleware.NotImplemented("operation files.GetGetFiles has not yet been implemented")
+		})
+	}
+	if api.FilesGetReadFileHandler == nil {
+		api.FilesGetReadFileHandler = files.GetReadFileHandlerFunc(func(params files.GetReadFileParams) middleware.Responder {
+			return middleware.NotImplemented("operation files.GetReadFile has not yet been implemented")
+		})
+	}
+	if api.AuthenticationGetTokenLoginHandler == nil {
+		api.AuthenticationGetTokenLoginHandler = authentication.GetTokenLoginHandlerFunc(func(params authentication.GetTokenLoginParams) middleware.Responder {
+			return middleware.NotImplemented("operation authentication.GetTokenLogin has not yet been implemented")
+		})
+	}
+	if api.FilesPostCreateFileHandler == nil {
+		api.FilesPostCreateFileHandler = files.PostCreateFileHandlerFunc(func(params files.PostCreateFileParams) middleware.Responder {
+			return middleware.NotImplemented("operation files.PostCreateFile has not yet been implemented")
+		})
+	}
+	if api.FilesPostDeleteFileHandler == nil {
+		api.FilesPostDeleteFileHandler = files.PostDeleteFileHandlerFunc(func(params files.PostDeleteFileParams) middleware.Responder {
+			return middleware.NotImplemented("operation files.PostDeleteFile has not yet been implemented")
+		})
+	}
+	if api.AuthenticationPostLogoutHandler == nil {
+		api.AuthenticationPostLogoutHandler = authentication.PostLogoutHandlerFunc(func(params authentication.PostLogoutParams) middleware.Responder {
+			return middleware.NotImplemented("operation authentication.PostLogout has not yet been implemented")
+		})
+	}
+	if api.AuthenticationPostNewLoginHandler == nil {
+		api.AuthenticationPostNewLoginHandler = authentication.PostNewLoginHandlerFunc(func(params authentication.PostNewLoginParams) middleware.Responder {
+			return middleware.NotImplemented("operation authentication.PostNewLogin has not yet been implemented")
+		})
+	}
+	if api.FilesPostUpdateFileHandler == nil {
+		api.FilesPostUpdateFileHandler = files.PostUpdateFileHandlerFunc(func(params files.PostUpdateFileParams) middleware.Responder {
+			return middleware.NotImplemented("operation files.PostUpdateFile has not yet been implemented")
 		})
 	}
 

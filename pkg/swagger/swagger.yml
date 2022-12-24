@@ -77,7 +77,7 @@ parameters:
       properties:
         user_id:
           type: string
-        token:
+        session_token:
           type: string
   FileReference:
     description: a reference to a specific file by ID and an authentication token with it
@@ -117,15 +117,11 @@ paths:
           schema:
             type: object
             required:
-              - user
               - code
               - hosted_domain
               - prompt
               - scope
-              - csrf_state
             properties:
-              user:
-                type: string
               code:
                 type: string
               hosted_domain:
@@ -133,8 +129,6 @@ paths:
               prompt:
                 type: string
               scope:
-                type: string
-              csrf_state:
                 type: string
       responses:
         200:
@@ -167,7 +161,7 @@ paths:
       tags:
       - Authentication
       operationId: tokenLogin
-      summary: verifies a serssion token and returns user data. Will also generate a new session token and replace it
+      summary: verifies a session token and returns user data. Will also generate a new token if close to expiry
       produces:
       - application/json
       parameters:

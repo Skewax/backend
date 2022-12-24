@@ -11,6 +11,21 @@ have a cap and implement a paging system clientside
 both backend and frontend, need to be able to 
 completely clear user data on request
 
+## Caching Session Tokens and Google Access Tokens
+when user is given a session token, it should 
+1. upload to database with all data
+2. cache key value pair with structure
+  - key: session token
+  - value:
+    - google access token
+    - ID associated with token (for user verification)
+    - caching expiry (some predetermined period like 10 minutes)
+    - access token expiry (subtract some time like a minute to guarantee not sending bad)
+    - session token expiry (maybe don't need?)
+
+whenever user makes request it should first go through caching data then if token isn't there
+it will check database. only when neither contain the token does it return a permissions error
+
 # Database structure
 
 ## NOTES

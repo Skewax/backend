@@ -11,6 +11,21 @@ tasks:
     cmds:
     - GOFLAGS=-mod=mod go run internal/main.go
 
+  air.init:
+    desc: set up air config for live update
+    cmds:
+    - $GOPATH/bin/air init
+
+  air.run:
+    desc: live update the go code with air
+    cmds:
+    - GOFLAGS=-mod=mod $GOPATH/bin/air --build.cmd "go build -o bin/skewax-backend internal/main.go" --build.bin "bin/skewax-backend"
+
+  swagger:
+    desc: do everything for swagger
+    cmds:
+    - task swagger.validate && task swagger.doc && task swagger.gen
+
   swagger.gen:
     desc: generate swagger code
     cmds:
@@ -26,4 +41,5 @@ tasks:
     desc: generate docs for swagger
     cmds:
     - docker run --rm -i yousan/swagger-yaml-to-html < pkg/swagger/swagger.yml > docs/index.html
+
 

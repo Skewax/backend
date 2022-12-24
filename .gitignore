@@ -1,2 +1,6 @@
 .DS_STORE
 pkg/swagger/server/
+]
+bin/
+tmp/
+.env

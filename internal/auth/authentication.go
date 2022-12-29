@@ -1,6 +1,7 @@
 package skewauth
 
 import (
+	"log"
 	"time"
 
 	"database/sql"
@@ -9,12 +10,10 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var _ = sql.Named
-
 type GoogleAuthToken struct {
-	accessToken  string
-	refreshToken string
-	accessLife   time.Duration
+	accessToken   string
+	refreshToken  string
+	accessTimeout time.Time
 }
 
 type AuthToken struct {
@@ -32,7 +31,10 @@ func (t AuthToken) GetErrorCode() string {
 }
 
 func (t AuthToken) GetErrorDesc() string {
-	return t.status[5:]
+	if len(t.status) > 6 {
+		return t.status[5:]
+	}
+	return ""
 }
 
 func (t AuthToken) SessionToken() string {
@@ -41,6 +43,10 @@ func (t AuthToken) SessionToken() string {
 
 func (t AuthToken) GoogleToken() string {
 	return t.gAuth.accessToken
+}
+
+func (t AuthToken) GoogleTimeout() int64 {
+	return t.gAuth.accessTimeout.Unix()
 }
 
 type AuthConfig struct {
@@ -72,13 +78,27 @@ type ClearTokenReq struct {
 	ShouldClearUser bool //will remove access and refresh tokens as well
 }
 
+type DBUserSession struct {
+	SessionToken string `field:"sessionkey"`
+	Uid          string `field:"userid"`
+	Timeout      int64  `field:"expiry"`
+}
+
+type DBUser struct {
+	id           string
+	accesstoken  string
+	refreshtoken string
+	expiry       int64
+}
+
 func Begin(quit chan bool, useTokenReqs chan *UseTokenReq, genTokenReqs chan *GenTokenReq, clearTokenReqs chan *ClearTokenReq, conf *AuthConfig) {
 	//initialization of all authentication connections and such
 	db, err := sql.Open("postgres", conf.ConnStr)
 	if err != nil {
-		//log.Fatal("open database error") //comment for testing
+		log.Fatal("open database error") //comment for testing
 	}
 	defer db.Close()
+
 	c := cache.New(conf.CacheTime)
 	defer c.Close()
 
@@ -87,6 +107,14 @@ func Begin(quit chan bool, useTokenReqs chan *UseTokenReq, genTokenReqs chan *Ge
 	go beginTokenClearer(clearTokenReqs, db, c, conf, quit)
 
 	<-quit
+}
+
+func ErrAuthToken(err string) AuthToken {
+	return AuthToken{
+		gAuth:  GoogleAuthToken{},
+		uToken: "",
+		status: err,
+	}
 }
 
 func beginTokenGenerator(reqs chan *GenTokenReq, db *sql.DB, c *cache.Cache, conf *AuthConfig, quit chan bool) {
@@ -98,7 +126,7 @@ func beginTokenGenerator(reqs chan *GenTokenReq, db *sql.DB, c *cache.Cache, con
 
 func beginTokenValidator(reqs chan *UseTokenReq, db *sql.DB, c *cache.Cache, conf *AuthConfig, quit chan bool) {
 	for req := range reqs {
-		ValidateTokenReq(req, conf)
+		ValidateTokenReq(req, db, conf)
 	}
 	<-quit
 }
@@ -110,10 +138,42 @@ func beginTokenClearer(reqs chan *ClearTokenReq, db *sql.DB, c *cache.Cache, con
 	<-quit
 }
 
-func ValidateTokenReq(req *UseTokenReq, conf *AuthConfig) {
-	//checking for a valid request
-	//TEMP
-	req.Result <- AuthToken{GoogleAuthToken{"", "", time.Duration(1 * time.Minute)}, "the previously valid session token", "OK"}
+func ValidateTokenReq(req *UseTokenReq, db *sql.DB, conf *AuthConfig) {
+	rows, err := db.Query("SELECT sessionkey, userid, expiry FROM usersessions WHERE sessionkey = '" + req.Token + "'")
+	defer rows.Close()
+	if err != nil {
+		log.Fatalln(err)
+		req.Result <- ErrAuthToken("500: internal server error. " + err.Error())
+		return
+	}
+	//!rows.next implies no session in db
+	if !rows.Next() {
+		req.Result <- ErrAuthToken("400: Invalid Session")
+		return
+	}
+	//throwing first row result of query into a usersession
+	//this is guaranteed to be the only result because sessionkeys are unique
+	var uSession DBUserSession
+	rows.Scan(&uSession.SessionToken, &uSession.Uid, &uSession.Timeout)
+
+	//error checking to match posted userID with sessionID
+	//NOTE error method should be identical to no session in db
+	//above for security reasons. If they're different an attacker
+	//knows that they've found a valid session by guessing
+	if uSession.Uid != req.Uid {
+		req.Result <- ErrAuthToken("400: Invalid Session")
+	}
+
+	req.Result <- AuthToken{
+		gAuth: GoogleAuthToken{
+			accessToken:   "Access",
+			refreshToken:  "Refresh Token",
+			accessTimeout: time.Now(),
+		},
+		uToken: "",
+		status: "OK",
+	}
+	return
 }
 
 func GenerateToken(req *GenTokenReq, conf *AuthConfig) {
@@ -130,7 +190,15 @@ func GenerateToken(req *GenTokenReq, conf *AuthConfig) {
 		return
 	}
 	//TEMP
-	req.Result <- AuthToken{GoogleAuthToken{"", "", time.Duration(1 * time.Minute)}, "a new session token", "OK"}
+	req.Result <- AuthToken{
+		gAuth: GoogleAuthToken{
+			accessToken:   "Access Token",
+			refreshToken:  "Refresh Token",
+			accessTimeout: time.Now(),
+		},
+		uToken: "",
+		status: "",
+	}
 }
 
 func ClearToken(req *ClearTokenReq, conf *AuthConfig) {

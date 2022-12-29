@@ -10,16 +10,38 @@ import (
 func HandleTokenLogin(tokenChan chan *skewauth.UseTokenReq, params authentication.TokenLoginParams) middleware.Responder {
 	reqChan := make(chan skewauth.AuthToken)
 	tokenChan <- &skewauth.UseTokenReq{
-		*params.Body.UserID,
-		*params.Body.SessionToken,
-		true,
-		reqChan,
+		Uid:        *params.Body.UserID,
+		Token:      *params.Body.SessionToken,
+		CanReplace: true,
+		Result:     reqChan,
 	}
 	result := <-reqChan
-	name := result.SessionToken()
-	image := result.GoogleToken()
-	body := models.LoginResponse{Error: "", SessionToken: "sessionToken", Timeout: 100, User: &models.User{Name: &name, Image: &image}}
-	return authentication.NewTokenLoginOK().WithPayload(&body)
+	switch {
+	case result.OK():
+		//TODO remove validated token, create and cache new
+		//TODO get google data
+		name := "TEMPNAME"
+		imageUrl := "TEMPURL"
+		return authentication.NewTokenLoginOK().WithPayload(&models.LoginResponse{
+			Error:        "",
+			SessionToken: result.SessionToken(),
+			Timeout:      result.GoogleTimeout(),
+			User: &models.User{
+				Name:  &name,
+				Image: &imageUrl,
+			},
+		})
+	default:
+		model := models.BasicResponse{
+			Error: result.GetErrorDesc(),
+		}
+		switch result.GetErrorCode() {
+		case "400":
+			return authentication.NewTokenLoginBadRequest().WithPayload(&model)
+		default:
+			return authentication.NewTokenLoginInternalServerError().WithPayload(&model)
+		}
+	}
 }
 
 func HandleLogout(tokenChan chan *skewauth.ClearTokenReq, params authentication.LogoutParams) middleware.Responder {

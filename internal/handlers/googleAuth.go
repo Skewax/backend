@@ -17,10 +17,34 @@ func HandleGoogleLogin(tokenChan chan *skewauth.GenTokenReq, params authenticati
 		Result:       reqChan,
 	}
 	result := <-reqChan
-	if !result.OK() {
-		return authentication.NewGoogleLoginBadRequest().WithPayload(&models.BasicResponse{result.GetErrorCode() + ": " + result.GetErrorDesc()})
+	switch {
+	case result.OK():
+		//TODO: get user data from google on OK
+		//TODO: add access and refresh tokens both to cache and database
+		name := "TEMPNAME"
+		imageUrl := "TEMPURL"
+		return authentication.NewGoogleLoginOK().WithPayload(&models.LoginResponse{
+			Error:        "",
+			SessionToken: result.SessionToken(),
+			Timeout:      result.GoogleTimeout(),
+			User: &models.User{
+				Name:  &name,
+				Image: &imageUrl,
+			},
+		})
+	default:
+		model := models.BasicResponse{
+			Error: result.GetErrorDesc(),
+		}
+		switch result.GetErrorCode() {
+		case "400":
+			return authentication.NewGoogleLoginBadRequest().WithPayload(&model)
+		case "401":
+			return authentication.NewGoogleLoginUnauthorized().WithPayload(&model)
+		case "408":
+			return authentication.NewGoogleLoginRequestTimeout().WithPayload(&model)
+		default:
+			return authentication.NewGoogleLoginInternalServerError().WithPayload(&model)
+		}
 	}
-	name := result.GoogleToken()
-	image := result.SessionToken()
-	return authentication.NewGoogleLoginOK().WithPayload(&models.LoginResponse{"", "token", 100, &models.User{&name, &image}})
 }
